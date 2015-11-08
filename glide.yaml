@@ -1,0 +1,84 @@
+parent: null
+package: main
+import:
+- package: github.com/MSOpenTech/azure-sdk-for-go
+  version: 515f3ec74ce6a5b31e934cefae997c97bd0a1b1e
+- package: code.google.com/p/goauth2
+  version: afe77d958c70
+  subpackages:
+  - oauth
+- package: google.golang.org/api
+  version: a09229c13c2f13bbdedf7b31b506cad4c83ef3bf
+  subpackages:
+  - compute/v1
+  - googleapi
+- package: golang.org/x/crypto
+  version: 1fbbd62cfec66bd39d91e97749579579d4d3037e
+  subpackages:
+  - ssh
+- package: github.com/stretchr/testify
+  version: e4ec8152c15fc46bd5056ce65997a07c7d415325
+  subpackages:
+  - assert
+- package: github.com/xanzy/go-cloudstack
+  version: 0e6e56fc0db3f48f060273f2e2ffe5d8d41b0112
+- package: github.com/rackspace/gophercloud
+  version: ce0f487f6747ab43c4e4404722df25349385bebd
+- package: github.com/vmware/govcloudair
+  version: 66a23eaabc61518f91769939ff541886fe1dceef
+- package: github.com/docker/machine
+  version: 93376828af9aa9bc7734fcf0440e2baedf3aca4f
+- package: github.com/google/go-querystring
+  version: 30f7a39f4a218feb5325f3aebc60c32a572a8274
+  subpackages:
+  - query
+- package: github.com/pyr/egoscale
+  version: bbaa67324aeeacc90430c1fe0a9c620d3929512e
+  subpackages:
+  - src/egoscale
+- package: golang.org/x/net
+  version: d9558e5c97f85372afee28cf2b6059d7d3818919
+  subpackages:
+  - context
+- package: golang.org/x/oauth2
+  version: 038cb4adce85ed41e285c2e7cc6221a92bfa44aa
+- package: github.com/digitalocean/godo
+  version: 5478aae80694de1d2d0e02c386bbedd201266234
+- package: github.com/smartystreets/go-aws-auth
+  version: 1f0db8c0ee6362470abe06a94e3385927ed72a4b
+- package: github.com/mitchellh/mapstructure
+  version: 740c764bc6149d3f1806231418adb9f52c11bcbf
+- package: github.com/skarademir/naturalsort
+  version: 983d4d86054d80f91fd04dd62ec52c1d078ce403
+- package: google.golang.org/cloud
+  version: 2400193c85c3561d13880d34e0e10c4315bb02af
+  subpackages:
+  - compute
+- package: github.com/codegangsta/cli
+  version: e1712f381785e32046927f64a7c86fe569203196
+- package: github.com/cenkalti/backoff
+  version: 9831e1e25c874e0a0601b6dc43641071414eec7a
+- package: github.com/docker/libtrust
+  version: c54fbb67c1f1e68d7d6f8d2ad7c9360404616a41
+- package: github.com/tent/http-link-go
+  version: ac974c61c2f990f4115b119354b5e0b47550e888
+- package: github.com/docker/docker
+  version: a8a31eff10544860d2188dddabdee4d727545796
+  subpackages:
+  - dockerversion
+  - engine
+  - pkg/archive
+  - pkg/fileutils
+  - pkg/ioutils
+  - pkg/mflag
+  - pkg/parsers
+  - pkg/pools
+  - pkg/promise
+  - pkg/system
+  - pkg/term
+  - pkg/timeutils
+  - pkg/units
+  - pkg/version
+  - vendor/src/code.google.com/p/go/src/pkg/archive/tar
+- package: github.com/Azure/go-ansiterm
+  version: 70b2c90b260171e829f1ebd7c17f600c11858dbe

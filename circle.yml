@@ -1,0 +1,21 @@
+machine:
+  timezone:
+    Asia/Tokyo
+  services:
+    - docker
+
+dependencies:
+  override:
+    - USE_CONTAINER=true make build
+  cache_directories:
+    - vendor
+
+test:
+  override:
+    - USE_CONTAINER=true make test
+  
+deployment:
+  pre_release:
+    branch: master
+    commands:
+      - USE_CONTAINER=true make release
