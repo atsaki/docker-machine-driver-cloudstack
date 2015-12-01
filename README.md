@@ -1,5 +1,7 @@
 # Docker Machine CloudStack Driver                                                 
                                                                                    
+[![Circle CI](https://circleci.com/gh/atsaki/docker-machine-driver-cloudstack.svg?style=svg)](https://circleci.com/gh/atsaki/docker-machine-driver-cloudstack)
+
 docker-machine-cloudstack is a plugin for [Docker Machine](https://docs.docker.com/machine/).
 It allows to create Docker hosts on [Apache CloudStack](https://cloudstack.apache.org/) and
 [Citrix CloudPlatform](http://www.citrix.com/products/cloudplatform/overview.html).
