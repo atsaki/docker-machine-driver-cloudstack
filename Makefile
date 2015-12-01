@@ -35,11 +35,8 @@ build test release:
 		make $@
 else
 build:
-	export GO15VENDOREXPERIMENT=1
-
-	glide --debug up
-
-	GOGC=off gox -os "$(TARGET_OS)" -arch "$(TARGET_ARCH)" \
+	GO15VENDOREXPERIMENT=1 glide up
+	GO15VENDOREXPERIMENT=1 GOGC=off gox -os "$(TARGET_OS)" -arch "$(TARGET_ARCH)" \
 	-output "dist/$(EXECUTABLE_NAME)_{{.OS}}_{{.Arch}}" ./bin
 
 test:
