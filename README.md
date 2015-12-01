@@ -8,7 +8,7 @@ It allows to create Docker hosts on [Apache CloudStack](https://cloudstack.apach
                                                                                    
 ## Requirements                                                                    
                                                                                    
-* [Docker Machine](https://docs.docker.com/machine/) 0.5.0 or later            
+* [Docker Machine](https://docs.docker.com/machine/) 0.5.1 or later            
                                                                                    
 ## Installation                                                                    
                                                                                    

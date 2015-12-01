@@ -331,7 +331,8 @@ func (d *Driver) Create() error {
 	}
 
 	if d.NetworkType == "Advanced" && d.PublicIP != "" && !d.UsePrivateIP {
-		d.configureFirewallAndPortForwardingRules()
+		d.configureFirewallRules()
+		d.configurePortForwardingRules()
 	}
 
 	return nil
@@ -483,7 +484,7 @@ func (d *Driver) deleteKeyPair() error {
 	return nil
 }
 
-func (d *Driver) configureFirewallAndPortForwardingRule(ipaddressId string, publicPort, privatePort int) error {
+func (d *Driver) configureFirewallRule(ipaddressId string, publicPort, privatePort int) error {
 	cs := d.getClient()
 
 	log.Debugf("Creating firewall rule ... : cidr list: %v, port %d", d.CIDRList, publicPort)
@@ -502,17 +503,24 @@ func (d *Driver) configureFirewallAndPortForwardingRule(ipaddressId string, publ
 		d.FirewallRuleIds = append(d.FirewallRuleIds, rule.Id)
 	}
 
-	pfp := cs.Firewall.NewCreatePortForwardingRuleParams(
+	return nil
+}
+
+func (d *Driver) configurePortForwardingRule(ipaddressId string, publicPort, privatePort int) error {
+	cs := d.getClient()
+
+	log.Debugf("Creating port forwarding rule ... : cidr list: %v, port %d", d.CIDRList, publicPort)
+	p := cs.Firewall.NewCreatePortForwardingRuleParams(
 		ipaddressId, privatePort, "tcp", publicPort, d.Id)
-	pfp.SetOpenfirewall(false)
-	if _, err = cs.Firewall.CreatePortForwardingRule(pfp); err != nil {
+	p.SetOpenfirewall(false)
+	if _, err := cs.Firewall.CreatePortForwardingRule(p); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (d *Driver) configureFirewallAndPortForwardingRules() error {
+func (d *Driver) configureFirewallRules() error {
 	cs := d.getClient()
 
 	log.Debugf("Retrieving IP address id: %q", d.PublicIP)
@@ -529,19 +537,19 @@ func (d *Driver) configureFirewallAndPortForwardingRules() error {
 	ipaddressId := ips.PublicIpAddresses[0].Id
 	log.Debugf("IP address id: %q", ipaddressId)
 
-	log.Info("Creating firewall and port forwarding rule for ssh port ...")
-	if err := d.configureFirewallAndPortForwardingRule(ipaddressId, 22, 22); err != nil {
+	log.Info("Creating firewall rule for ssh port ...")
+	if err := d.configureFirewallRule(ipaddressId, 22, 22); err != nil {
 		return err
 	}
 
-	log.Info("Creating firewall and port forwarding rule for docker port ...")
-	if err := d.configureFirewallAndPortForwardingRule(ipaddressId, dockerPort, dockerPort); err != nil {
+	log.Info("Creating firewall rule for docker port ...")
+	if err := d.configureFirewallRule(ipaddressId, dockerPort, dockerPort); err != nil {
 		return err
 	}
 
 	if d.SwarmMaster {
-		log.Info("Creating firewall and port forwarding rule for swarm port ...")
-		if err := d.configureFirewallAndPortForwardingRule(ipaddressId, swarmPort, swarmPort); err != nil {
+		log.Info("Creating firewall rule for swarm port ...")
+		if err := d.configureFirewallRule(ipaddressId, swarmPort, swarmPort); err != nil {
 			return err
 		}
 	}
@@ -560,6 +568,43 @@ func (d *Driver) deleteFirewallRules() error {
 			}
 		}
 	}
+	return nil
+}
+
+func (d *Driver) configurePortForwardingRules() error {
+	cs := d.getClient()
+
+	log.Debugf("Retrieving IP address id: %q", d.PublicIP)
+	p := cs.Address.NewListPublicIpAddressesParams()
+	p.SetIpaddress(d.PublicIP)
+
+	ips, err := cs.Address.ListPublicIpAddresses(p)
+	if err != nil {
+		return err
+	}
+	if ips.Count < 1 {
+		return fmt.Errorf("Could not find IP address: %s", d.PublicIP)
+	}
+	ipaddressId := ips.PublicIpAddresses[0].Id
+	log.Debugf("IP address id: %q", ipaddressId)
+
+	log.Info("Creating port forwarding rule for ssh port ...")
+	if err := d.configurePortForwardingRule(ipaddressId, 22, 22); err != nil {
+		return err
+	}
+
+	log.Info("Creating port forwarding rule for docker port ...")
+	if err := d.configurePortForwardingRule(ipaddressId, dockerPort, dockerPort); err != nil {
+		return err
+	}
+
+	if d.SwarmMaster {
+		log.Info("Creating port forwarding rule for swarm port ...")
+		if err := d.configurePortForwardingRule(ipaddressId, swarmPort, swarmPort); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
