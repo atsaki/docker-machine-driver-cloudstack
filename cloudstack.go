@@ -315,8 +315,14 @@ func (d *Driver) Create() error {
 				return err
 			}
 		}
-		d.configureFirewallRules()
-		d.configurePortForwardingRules()
+
+		if err := d.configureFirewallRules(); err != nil {
+			return err
+		}
+
+		if err := d.configurePortForwardingRules(); err != nil {
+			return err
+		}
 	}
 
 	return nil
