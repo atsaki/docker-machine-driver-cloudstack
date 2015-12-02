@@ -513,11 +513,11 @@ func (d *Driver) configureFirewallRule(publicPort, privatePort int) error {
 	cs := d.getClient()
 
 	log.Debugf("Creating firewall rule ... : cidr list: %v, port %d", d.CIDRList, publicPort)
-	fwp := cs.Firewall.NewCreateFirewallRuleParams(d.PublicIPID, "tcp")
-	fwp.SetCidrlist(d.CIDRList)
-	fwp.SetStartport(publicPort)
-	fwp.SetEndport(publicPort)
-	rule, err := cs.Firewall.CreateFirewallRule(fwp)
+	p := cs.Firewall.NewCreateFirewallRuleParams(d.PublicIPID, "tcp")
+	p.SetCidrlist(d.CIDRList)
+	p.SetStartport(publicPort)
+	p.SetEndport(publicPort)
+	rule, err := cs.Firewall.CreateFirewallRule(p)
 	if err != nil {
 		// If the error reports the port is already open, just ignore.
 		if !strings.Contains(err.Error(), fmt.Sprintf(
