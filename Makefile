@@ -1,7 +1,7 @@
 .PHONY: build test release clean
 
 GITHUB_USER := atsaki
-VERSION := $( git describe --abbrev=0 --tags )
+VERSION := $( grep -w Version version.go | awk '{print $5}' | sed 's/"//g' )
 
 TARGET_OS ?= darwin linux windows
 TARGET_ARCH ?= amd64
@@ -43,6 +43,8 @@ test:
 	exit 0
 
 release: clean build
+	git tag | grep -q -w $(VERSION) || git tag $(VERSION)
+
 	ghr --repository $(CURRENT_DIR) \
 		--username $(GITHUB_USER) \
 		--prerelease \
