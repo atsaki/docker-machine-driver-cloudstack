@@ -162,14 +162,15 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.UsePrivateIP = flags.Bool("cloudstack-use-private-address")
 	d.HTTPGETOnly = flags.Bool("cloudstack-http-get-only")
 	d.JobTimeOut = int64(flags.Int("cloudstack-timeout"))
-	d.PublicIP = flags.String("cloudstack-public-ip")
 	d.SSHUser = flags.String("cloudstack-ssh-user")
 	d.CIDRList = flags.StringSlice("cloudstack-cidr")
 	d.Expunge = flags.Bool("cloudstack-expunge")
-	d.Template = flags.String("cloudstack-template")
-	d.ServiceOffering = flags.String("cloudstack-service-offering")
-	d.Network = flags.String("cloudstack-network")
-	d.Zone = flags.String("cloudstack-zone")
+
+	d.setZone(flags.String("cloudstack-zone"))
+	d.setTemplate(flags.String("cloudstack-template"))
+	d.setServiceOffering(flags.String("cloudstack-service-offering"))
+	d.setNetwork(flags.String("cloudstack-network"))
+	d.setPublicIP(flags.String("cloudstack-public-ip"))
 
 	d.SwarmMaster = flags.Bool("swarm-master")
 	d.SwarmDiscovery = flags.String("swarm-discovery")
@@ -201,12 +202,6 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	if len(d.CIDRList) == 0 {
 		d.CIDRList = []string{"0.0.0.0/0"}
 	}
-
-	d.updateZoneIDAndNetworkType()
-	d.updateTemplateID()
-	d.updateServiceOfferingID()
-	d.updateNetworkID()
-	d.updatePublicIPID()
 
 	return nil
 }
@@ -429,62 +424,99 @@ func (d *Driver) getClient() *cloudstack.CloudStackClient {
 	return cs
 }
 
-func (d *Driver) updateZoneIDAndNetworkType() error {
-	cs := d.getClient()
-	log.Debugf("Retrieving zone id and network type: %q", d.Zone)
-	// ignore count because if count != 1 the err != nil
-	zone, _, err := cs.Zone.GetZoneByName(d.Zone)
-	if err != nil {
-		return fmt.Errorf("Unable to retrieve zone: %v", err)
+func (d *Driver) setZone(zone string) error {
+	d.Zone = zone
+	d.ZoneID = ""
+	d.NetworkType = ""
+
+	if d.Zone == "" {
+		return nil
 	}
-	d.ZoneID = zone.Id
-	d.NetworkType = zone.Networktype
+
+	cs := d.getClient()
+	z, _, err := cs.Zone.GetZoneByName(d.Zone)
+	if err != nil {
+		return fmt.Errorf("Unable to get zone: %v", err)
+	}
+
+	d.ZoneID = z.Id
+	d.NetworkType = z.Networktype
+
+	log.Debugf("zone: %q", d.Zone)
 	log.Debugf("zone id: %q", d.ZoneID)
 	log.Debugf("network type: %q", d.NetworkType)
 
 	return nil
-
 }
 
-func (d *Driver) updateTemplateID() error {
+func (d *Driver) setTemplate(template string) error {
+	d.Template = template
+	d.TemplateID = ""
+
+	if d.Template == "" {
+		return nil
+	}
+
+	if d.ZoneID == "" {
+		return fmt.Errorf("Unable to get template id: zone is not set")
+	}
+
 	cs := d.getClient()
-	log.Debugf("Retrieving template id: %q", d.Template)
 	templateid, err := cs.Template.GetTemplateID(d.Template, "executable", d.ZoneID)
 	if err != nil {
-		return fmt.Errorf("Unable to retrieve template id: %v", err)
+		return fmt.Errorf("Unable to get template id: %v", err)
 	}
+
 	d.TemplateID = templateid
 	log.Debugf("template id: %q", d.TemplateID)
+
 	return nil
 }
 
-func (d *Driver) updateServiceOfferingID() error {
+func (d *Driver) setServiceOffering(serviceoffering string) error {
+	d.ServiceOffering = serviceoffering
+	d.ServiceOfferingID = ""
+
+	if d.ServiceOffering == "" {
+		return nil
+	}
+
 	cs := d.getClient()
-	log.Debugf("Retrieving service offering id: %q", d.ServiceOffering)
 	serviceofferingid, err := cs.ServiceOffering.GetServiceOfferingID(d.ServiceOffering)
 	if err != nil {
-		return fmt.Errorf("Unable to retrieve service offering id: %v", err)
+		return fmt.Errorf("Unable to get service offering id: %v", err)
 	}
+
 	d.ServiceOfferingID = serviceofferingid
+
 	log.Debugf("service offering id: %q", d.ServiceOfferingID)
 
 	return nil
 }
 
-func (d *Driver) updateNetworkID() error {
+func (d *Driver) setNetwork(network string) error {
+	d.Network = network
+	d.NetworkID = ""
+
+	if d.Network == "" {
+		return nil
+	}
+
 	cs := d.getClient()
-	log.Debugf("Retrieving network id: %q", d.Network)
 	networkid, err := cs.Network.GetNetworkID(d.Network)
 	if err != nil {
-		return fmt.Errorf("Unable to retrieve network id: %v", err)
+		return fmt.Errorf("Unable to get network id: %v", err)
 	}
+
 	d.NetworkID = networkid
-	log.Debugf("network id: %q", networkid)
+
+	log.Debugf("network id: %q", d.NetworkID)
 
 	return nil
 }
 
-func (d *Driver) updatePublicIPID() error {
+func (d *Driver) setPublicIP(publicip string) error {
+	d.PublicIP = publicip
 	d.PublicIPID = ""
 
 	if d.PublicIP == "" {
@@ -496,12 +528,15 @@ func (d *Driver) updatePublicIPID() error {
 	p.SetIpaddress(d.PublicIP)
 	ips, err := cs.Address.ListPublicIpAddresses(p)
 	if err != nil {
-		return fmt.Errorf("Failed to update PublicIPID: %s", err)
+		return fmt.Errorf("Unable to get public ip id: %s", err)
 	}
 	if ips.Count < 1 {
-		return fmt.Errorf("Failed to update PublicIPID: Could not find IP %s", d.PublicIP)
+		return fmt.Errorf("Unable to get public ip id: Not Found %s", d.PublicIP)
 	}
+
 	d.PublicIPID = ips.PublicIpAddresses[0].Id
+
+	log.Debugf("public ip id: %q", d.PublicIPID)
 
 	return nil
 }
