@@ -192,6 +192,8 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.SwarmMaster = flags.Bool("swarm-master")
 	d.SwarmDiscovery = flags.String("swarm-discovery")
 
+	d.SSHKeyPair = d.MachineName
+
 	if d.ApiURL == "" {
 		return &configError{option: "api-url"}
 	}
@@ -283,6 +285,15 @@ func (d *Driver) GetState() (state.State, error) {
 
 // PreCreate allows for pre-create operations to make sure a driver is ready for creation
 func (d *Driver) PreCreateCheck() error {
+
+	if err := d.checkKeyPair(); err != nil {
+		return err
+	}
+
+	if err := d.checkInstance(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -580,6 +591,41 @@ func (d *Driver) setPublicIP(publicip string) error {
 	return nil
 }
 
+func (d *Driver) checkKeyPair() error {
+	cs := d.getClient()
+
+	log.Infof("Checking if SSH key pair (%v) already exists...", d.SSHKeyPair)
+
+	p := cs.SSH.NewListSSHKeyPairsParams()
+	p.SetName(d.SSHKeyPair)
+	res, err := cs.SSH.ListSSHKeyPairs(p)
+	if err != nil {
+		return err
+	}
+	if res.Count > 0 {
+		return fmt.Errorf("SSH key pair (%v) already exists.", d.SSHKeyPair)
+	}
+	return nil
+}
+
+func (d *Driver) checkInstance() error {
+	cs := d.getClient()
+
+	log.Infof("Checking if instance (%v) already exists...", d.MachineName)
+
+	p := cs.VirtualMachine.NewListVirtualMachinesParams()
+	p.SetName(d.MachineName)
+	p.SetZoneid(d.ZoneID)
+	res, err := cs.VirtualMachine.ListVirtualMachines(p)
+	if err != nil {
+		return err
+	}
+	if res.Count > 0 {
+		return fmt.Errorf("Instance (%v) already exists.", d.SSHKeyPair)
+	}
+	return nil
+}
+
 func (d *Driver) createKeyPair() error {
 	cs := d.getClient()
 
@@ -592,14 +638,12 @@ func (d *Driver) createKeyPair() error {
 		return err
 	}
 
-	keyName := d.MachineName
 	log.Infof("Registering SSH key pair...")
 
-	p := cs.SSH.NewRegisterSSHKeyPairParams(keyName, string(publicKey))
+	p := cs.SSH.NewRegisterSSHKeyPairParams(d.SSHKeyPair, string(publicKey))
 	if _, err := cs.SSH.RegisterSSHKeyPair(p); err != nil {
 		return err
 	}
-	d.SSHKeyPair = keyName
 
 	return nil
 }
