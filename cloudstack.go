@@ -29,29 +29,30 @@ func (e *configError) Error() string {
 
 type Driver struct {
 	*drivers.BaseDriver
-	Id                string
-	ApiURL            string
-	ApiKey            string
-	SecretKey         string
-	HTTPGETOnly       bool
-	JobTimeOut        int64
-	UsePrivateIP      bool
-	PublicIP          string
-	PublicIPID        string
-	SSHKeyPair        string
-	PrivateIP         string
-	CIDRList          []string
-	FirewallRuleIds   []string
-	Expunge           bool
-	Template          string
-	TemplateID        string
-	ServiceOffering   string
-	ServiceOfferingID string
-	Network           string
-	NetworkID         string
-	Zone              string
-	ZoneID            string
-	NetworkType       string
+	Id                   string
+	ApiURL               string
+	ApiKey               string
+	SecretKey            string
+	HTTPGETOnly          bool
+	JobTimeOut           int64
+	UsePrivateIP         bool
+	PublicIP             string
+	PublicIPID           string
+	DisassociatePublicIP bool
+	SSHKeyPair           string
+	PrivateIP            string
+	CIDRList             []string
+	FirewallRuleIds      []string
+	Expunge              bool
+	Template             string
+	TemplateID           string
+	ServiceOffering      string
+	ServiceOfferingID    string
+	Network              string
+	NetworkID            string
+	Zone                 string
+	ZoneID               string
+	NetworkType          string
 }
 
 // GetCreateFlags registers the flags this driver adds to
@@ -203,6 +204,8 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		d.CIDRList = []string{"0.0.0.0/0"}
 	}
 
+	d.DisassociatePublicIP = false
+
 	return nil
 }
 
@@ -306,7 +309,12 @@ func (d *Driver) Create() error {
 		d.PublicIP = d.PrivateIP
 	}
 
-	if d.NetworkType == "Advanced" && d.PublicIPID != "" && !d.UsePrivateIP {
+	if d.NetworkType == "Advanced" && !d.UsePrivateIP {
+		if d.PublicIPID == "" {
+			if err := d.associatePublicIP(); err != nil {
+				return err
+			}
+		}
 		d.configureFirewallRules()
 		d.configurePortForwardingRules()
 	}
@@ -326,6 +334,10 @@ func (d *Driver) Remove() error {
 	}
 
 	if err := d.deleteFirewallRules(); err != nil {
+		return err
+	}
+
+	if err := d.disassociatePublicIP(); err != nil {
 		return err
 	}
 
@@ -574,6 +586,40 @@ func (d *Driver) deleteKeyPair() error {
 	if _, err := cs.SSH.DeleteSSHKeyPair(p); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (d *Driver) associatePublicIP() error {
+	cs := d.getClient()
+	log.Infof("Associating public ip address...")
+	p := cs.Address.NewAssociateIpAddressParams()
+	p.SetZoneid(d.ZoneID)
+	if d.NetworkID != "" {
+		p.SetNetworkid(d.NetworkID)
+	}
+	ip, err := cs.Address.AssociateIpAddress(p)
+	if err != nil {
+		return err
+	}
+	d.PublicIP = ip.Ipaddress
+	d.PublicIPID = ip.Id
+	d.DisassociatePublicIP = true
+
+	return nil
+}
+
+func (d *Driver) disassociatePublicIP() error {
+	if !d.DisassociatePublicIP {
+		return nil
+	}
+
+	cs := d.getClient()
+	log.Infof("Disassociating public ip address...")
+	p := cs.Address.NewDisassociateIpAddressParams(d.PublicIPID)
+	if _, err := cs.Address.DisassociateIpAddress(p); err != nil {
+		return err
+	}
+
 	return nil
 }
 
