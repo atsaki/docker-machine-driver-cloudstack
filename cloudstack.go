@@ -173,11 +173,21 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.CIDRList = flags.StringSlice("cloudstack-cidr")
 	d.Expunge = flags.Bool("cloudstack-expunge")
 
-	d.setZone(flags.String("cloudstack-zone"))
-	d.setTemplate(flags.String("cloudstack-template"))
-	d.setServiceOffering(flags.String("cloudstack-service-offering"))
-	d.setNetwork(flags.String("cloudstack-network"))
-	d.setPublicIP(flags.String("cloudstack-public-ip"))
+	if err := d.setZone(flags.String("cloudstack-zone")); err != nil {
+		return err
+	}
+	if err := d.setTemplate(flags.String("cloudstack-template")); err != nil {
+		return err
+	}
+	if err := d.setServiceOffering(flags.String("cloudstack-service-offering")); err != nil {
+		return err
+	}
+	if err := d.setNetwork(flags.String("cloudstack-network")); err != nil {
+		return err
+	}
+	if err := d.setPublicIP(flags.String("cloudstack-public-ip")); err != nil {
+		return err
+	}
 
 	d.SwarmMaster = flags.Bool("swarm-master")
 	d.SwarmDiscovery = flags.String("swarm-discovery")
