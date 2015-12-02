@@ -554,7 +554,7 @@ func (d *Driver) createKeyPair() error {
 	}
 
 	keyName := d.MachineName
-	log.Debugf("Creating SSH key pair: %s", keyName)
+	log.Infof("Registering SSH key pair...")
 
 	p := cs.SSH.NewRegisterSSHKeyPairParams(keyName, string(publicKey))
 	if _, err := cs.SSH.RegisterSSHKeyPair(p); err != nil {
@@ -568,7 +568,7 @@ func (d *Driver) createKeyPair() error {
 func (d *Driver) deleteKeyPair() error {
 	cs := d.getClient()
 
-	log.Debugf("Deleting SSH key pair: %s", d.SSHKeyPair)
+	log.Infof("Deleting SSH key pair...")
 
 	p := cs.SSH.NewDeleteSSHKeyPairParams(d.SSHKeyPair)
 	if _, err := cs.SSH.DeleteSSHKeyPair(p); err != nil {
