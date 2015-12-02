@@ -36,6 +36,7 @@ type Driver struct {
 	HTTPGETOnly          bool
 	JobTimeOut           int64
 	UsePrivateIP         bool
+	UsePortForward       bool
 	PublicIP             string
 	PublicIPID           string
 	DisassociatePublicIP bool
@@ -89,6 +90,10 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Name: "cloudstack-use-private-address",
 			Usage: "Do not use a public IP for this host, helpfull in cases where you have direct " +
 				"access to the IP addresses assigned by DHCP",
+		},
+		mcnflag.BoolFlag{
+			Name:  "cloudstack-use-port-forward",
+			Usage: "Use port forwarding rule instead of static nat to SSH the machine",
 		},
 		mcnflag.StringFlag{
 			Name:  "cloudstack-public-ip",
@@ -161,6 +166,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.ApiKey = flags.String("cloudstack-api-key")
 	d.SecretKey = flags.String("cloudstack-secret-key")
 	d.UsePrivateIP = flags.Bool("cloudstack-use-private-address")
+	d.UsePortForward = flags.Bool("cloudstack-use-port-forward")
 	d.HTTPGETOnly = flags.Bool("cloudstack-http-get-only")
 	d.JobTimeOut = int64(flags.Int("cloudstack-timeout"))
 	d.SSHUser = flags.String("cloudstack-ssh-user")
@@ -320,8 +326,14 @@ func (d *Driver) Create() error {
 			return err
 		}
 
-		if err := d.configurePortForwardingRules(); err != nil {
-			return err
+		if d.UsePortForward {
+			if err := d.configurePortForwardingRules(); err != nil {
+				return err
+			}
+		} else {
+			if err := d.enableStaticNat(); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -334,11 +346,6 @@ func (d *Driver) Remove() error {
 	p := cs.VirtualMachine.NewDestroyVirtualMachineParams(d.Id)
 	p.SetExpunge(d.Expunge)
 
-	log.Info("Removing CloudStack instance...")
-	if _, err := cs.VirtualMachine.DestroyVirtualMachine(p); err != nil {
-		return err
-	}
-
 	if err := d.deleteFirewallRules(); err != nil {
 		return err
 	}
@@ -347,6 +354,10 @@ func (d *Driver) Remove() error {
 		return err
 	}
 
+	log.Info("Removing CloudStack instance...")
+	if _, err := cs.VirtualMachine.DestroyVirtualMachine(p); err != nil {
+		return err
+	}
 	if d.NetworkType == "Basic" {
 		if err := d.deleteSecurityGroup(); err != nil {
 			return err
@@ -623,6 +634,17 @@ func (d *Driver) disassociatePublicIP() error {
 	log.Infof("Disassociating public ip address...")
 	p := cs.Address.NewDisassociateIpAddressParams(d.PublicIPID)
 	if _, err := cs.Address.DisassociateIpAddress(p); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Driver) enableStaticNat() error {
+	cs := d.getClient()
+	log.Infof("Enabling Static Nat...")
+	p := cs.NAT.NewEnableStaticNatParams(d.PublicIPID, d.Id)
+	if _, err := cs.NAT.EnableStaticNat(p); err != nil {
 		return err
 	}
 
