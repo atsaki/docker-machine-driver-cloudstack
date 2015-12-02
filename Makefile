@@ -1,7 +1,7 @@
 .PHONY: build test release clean
 
 GITHUB_USER := atsaki
-VERSION := $( grep -w Version version.go | awk '{print $5}' | sed 's/"//g' )
+VERSION := $(shell grep -w Version version.go | awk '{print $$5}' | sed 's/"//g')
 
 TARGET_OS ?= darwin linux windows
 TARGET_ARCH ?= amd64
