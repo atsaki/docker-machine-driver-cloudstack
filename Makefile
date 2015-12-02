@@ -1,8 +1,8 @@
 .PHONY: build test release clean
 
 GITHUB_USER := atsaki
+VERSION := $( git describe --abbrev=0 --tags )
 
-VERSION ?= dev
 TARGET_OS ?= darwin linux windows
 TARGET_ARCH ?= amd64
 
