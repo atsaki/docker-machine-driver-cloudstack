@@ -29,25 +29,29 @@ func (e *configError) Error() string {
 
 type Driver struct {
 	*drivers.BaseDriver
-	Id              string
-	ApiURL          string
-	ApiKey          string
-	SecretKey       string
-	HTTPGETOnly     bool
-	JobTimeOut      int64
-	UsePrivateIP    bool
-	PublicIP        string
-	PublicIPID      string
-	SSHKeyPair      string
-	PrivateIP       string
-	CIDRList        []string
-	FirewallRuleIds []string
-	Expunge         bool
-	Template        string
-	ServiceOffering string
-	Network         string
-	Zone            string
-	NetworkType     string
+	Id                string
+	ApiURL            string
+	ApiKey            string
+	SecretKey         string
+	HTTPGETOnly       bool
+	JobTimeOut        int64
+	UsePrivateIP      bool
+	PublicIP          string
+	PublicIPID        string
+	SSHKeyPair        string
+	PrivateIP         string
+	CIDRList          []string
+	FirewallRuleIds   []string
+	Expunge           bool
+	Template          string
+	TemplateID        string
+	ServiceOffering   string
+	ServiceOfferingID string
+	Network           string
+	NetworkID         string
+	Zone              string
+	ZoneID            string
+	NetworkType       string
 }
 
 // GetCreateFlags registers the flags this driver adds to
@@ -198,6 +202,10 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		d.CIDRList = []string{"0.0.0.0/0"}
 	}
 
+	d.updateZoneIDAndNetworkType()
+	d.updateTemplateID()
+	d.updateServiceOfferingID()
+	d.updateNetworkID()
 	d.updatePublicIPID()
 
 	return nil
@@ -268,48 +276,18 @@ func (d *Driver) PreCreateCheck() error {
 func (d *Driver) Create() error {
 	cs := d.getClient()
 
-	log.Debugf("Retrieving zone id and network type: %q", d.Zone)
-	// ignore count because if count != 1 the err != nil
-	zone, _, err := cs.Zone.GetZoneByName(d.Zone)
-	if err != nil {
-		return fmt.Errorf("Unable to retrieve zone: %v", err)
-	}
-	zoneid := zone.Id
-	d.NetworkType = zone.Networktype
-	log.Debugf("zone id: %q", zoneid)
-	log.Debugf("network type: %q", d.NetworkType)
-
-	log.Debugf("Retrieving template id: %q", d.Template)
-	templateid, err := cs.Template.GetTemplateID(d.Template, "executable", zoneid)
-	if err != nil {
-		return fmt.Errorf("Unable to retrieve template id: %v", err)
-	}
-	log.Debugf("template id: %q", zoneid)
-
-	log.Debugf("Retrieving service offering id: %q", d.ServiceOffering)
-	serviceofferingid, err := cs.ServiceOffering.GetServiceOfferingID(d.ServiceOffering)
-	if err != nil {
-		return fmt.Errorf("Unable to retrieve service offering id: %v", err)
-	}
-	log.Debugf("service offering id: %q", serviceofferingid)
-
 	if err := d.createKeyPair(); err != nil {
 		return err
 	}
 
-	p := cs.VirtualMachine.NewDeployVirtualMachineParams(serviceofferingid, templateid, zoneid)
+	p := cs.VirtualMachine.NewDeployVirtualMachineParams(
+		d.ServiceOfferingID, d.TemplateID, d.ZoneID)
 	p.SetName(d.MachineName)
 	p.SetDisplayname(d.MachineName)
 	p.SetKeypair(d.SSHKeyPair)
 
-	if d.Network != "" {
-		log.Debugf("Retrieving network id: %q", d.Network)
-		networkid, err := cs.Network.GetNetworkID(d.Network)
-		if err != nil {
-			return fmt.Errorf("Unable to retrieve network id: %v", err)
-		}
-		log.Debugf("network id: %q", serviceofferingid)
-		p.SetNetworkids([]string{networkid})
+	if d.NetworkID != "" {
+		p.SetNetworkids([]string{d.NetworkID})
 	}
 
 	if d.NetworkType == "Basic" {
@@ -449,6 +427,61 @@ func (d *Driver) getClient() *cloudstack.CloudStackClient {
 	cs.HTTPGETOnly = d.HTTPGETOnly
 	cs.AsyncTimeout(d.JobTimeOut)
 	return cs
+}
+
+func (d *Driver) updateZoneIDAndNetworkType() error {
+	cs := d.getClient()
+	log.Debugf("Retrieving zone id and network type: %q", d.Zone)
+	// ignore count because if count != 1 the err != nil
+	zone, _, err := cs.Zone.GetZoneByName(d.Zone)
+	if err != nil {
+		return fmt.Errorf("Unable to retrieve zone: %v", err)
+	}
+	d.ZoneID = zone.Id
+	d.NetworkType = zone.Networktype
+	log.Debugf("zone id: %q", d.ZoneID)
+	log.Debugf("network type: %q", d.NetworkType)
+
+	return nil
+
+}
+
+func (d *Driver) updateTemplateID() error {
+	cs := d.getClient()
+	log.Debugf("Retrieving template id: %q", d.Template)
+	templateid, err := cs.Template.GetTemplateID(d.Template, "executable", d.ZoneID)
+	if err != nil {
+		return fmt.Errorf("Unable to retrieve template id: %v", err)
+	}
+	d.TemplateID = templateid
+	log.Debugf("template id: %q", d.TemplateID)
+	return nil
+}
+
+func (d *Driver) updateServiceOfferingID() error {
+	cs := d.getClient()
+	log.Debugf("Retrieving service offering id: %q", d.ServiceOffering)
+	serviceofferingid, err := cs.ServiceOffering.GetServiceOfferingID(d.ServiceOffering)
+	if err != nil {
+		return fmt.Errorf("Unable to retrieve service offering id: %v", err)
+	}
+	d.ServiceOfferingID = serviceofferingid
+	log.Debugf("service offering id: %q", d.ServiceOfferingID)
+
+	return nil
+}
+
+func (d *Driver) updateNetworkID() error {
+	cs := d.getClient()
+	log.Debugf("Retrieving network id: %q", d.Network)
+	networkid, err := cs.Network.GetNetworkID(d.Network)
+	if err != nil {
+		return fmt.Errorf("Unable to retrieve network id: %v", err)
+	}
+	d.NetworkID = networkid
+	log.Debugf("network id: %q", networkid)
+
+	return nil
 }
 
 func (d *Driver) updatePublicIPID() error {
