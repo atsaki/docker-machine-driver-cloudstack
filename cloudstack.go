@@ -87,13 +87,12 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Value:  300,
 		},
 		mcnflag.BoolFlag{
-			Name: "cloudstack-use-private-address",
-			Usage: "Do not use a public IP for this host, helpfull in cases where you have direct " +
-				"access to the IP addresses assigned by DHCP",
+			Name:  "cloudstack-use-private-address",
+			Usage: "Use a private IP to access the machine",
 		},
 		mcnflag.BoolFlag{
 			Name:  "cloudstack-use-port-forward",
-			Usage: "Use port forwarding rule instead of static nat to SSH the machine",
+			Usage: "Use port forwarding rule to access the machine",
 		},
 		mcnflag.StringFlag{
 			Name:  "cloudstack-public-ip",
