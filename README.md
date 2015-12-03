@@ -12,5 +12,17 @@ It allows to create Docker hosts on [Apache CloudStack](https://cloudstack.apach
                                                                                    
 ## Installation                                                                    
                                                                                    
-Download the binary `docker-machine-driver-cloudstack` and put it your PATH (ex. `/usr/local/bin`)
+Download the binary from follwing link and put it within your PATH (ex. `/usr/local/bin`)
+
+https://github.com/atsaki/docker-machine-driver-cloudstack/releases/latest
+
+### Homebrew
+
+OSX User can use [Homebrew](http://brew.sh/).
+
+```bash
+brew tap atsaki/docker-machine-driver-cloudstack
+brew install docker-machine-driver-cloudstack
+```
+
      
