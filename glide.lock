@@ -1,0 +1,36 @@
+hash: 58cc43e0885a5a1a288059c8fc1ba19e11ca1172ba5fe08a34061e7886bcc78a
+updated: 2016-07-06T11:25:33.550149238+09:00
+imports:
+- name: github.com/Azure/go-ansiterm
+  version: 70b2c90b260171e829f1ebd7c17f600c11858dbe
+- name: github.com/docker/docker
+  version: a8a31eff10544860d2188dddabdee4d727545796
+  subpackages:
+  - pkg/term
+- name: github.com/docker/machine
+  version: a650a404fc3e006fea17b12615266168db79c776
+  subpackages:
+  - libmachine/drivers
+  - libmachine/log
+  - libmachine/mcnflag
+  - libmachine/ssh
+  - libmachine/state
+  - libmachine/drivers/plugin
+  - libmachine/mcnutils
+  - libmachine/drivers/plugin/localbinary
+  - libmachine/drivers/rpc
+  - libmachine/version
+  - version
+- name: github.com/Sirupsen/logrus
+  version: cdaedc68f2894175ac2b3221869685602c759e71
+- name: github.com/xanzy/go-cloudstack
+  version: 104168fa792713f5e04b76e2862779dc2ad85bcc
+  subpackages:
+  - cloudstack
+- name: golang.org/x/crypto
+  version: beef0f4390813b96e8e68fd78570396d0f4751fc
+  subpackages:
+  - ssh
+  - ssh/terminal
+  - curve25519
+devImports: []
