@@ -1,6 +1,4 @@
-FROM golang:1.5.1
-
-ENV GO15VENDOREXPERIMENT 1
+FROM golang:1.6.2
 
 RUN go get github.com/mitchellh/gox \
            github.com/Masterminds/glide \
