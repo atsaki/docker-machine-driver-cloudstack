@@ -1,6 +1,7 @@
 package cloudstack
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -54,6 +55,8 @@ type Driver struct {
 	Zone                 string
 	ZoneID               string
 	NetworkType          string
+	UserDataFile         string
+	UserData             string
 }
 
 // GetCreateFlags registers the flags this driver adds to
@@ -127,6 +130,10 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Name:  "cloudstack-zone",
 			Usage: "CloudStack zone",
 		},
+		mcnflag.StringFlag{
+			Name:  "cloudstack-userdata-file",
+			Usage: "CloudStack Userdata file",
+		},
 	}
 }
 
@@ -185,6 +192,9 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		return err
 	}
 	if err := d.setPublicIP(flags.String("cloudstack-public-ip")); err != nil {
+		return err
+	}
+	if err := d.setUserData(flags.String("cloudstack-userdata-file")); err != nil {
 		return err
 	}
 
@@ -309,6 +319,7 @@ func (d *Driver) Create() error {
 	p.SetName(d.MachineName)
 	p.SetDisplayname(d.MachineName)
 	p.SetKeypair(d.SSHKeyPair)
+	p.SetUserdata(d.UserData)
 
 	if d.NetworkID != "" {
 		p.SetNetworkids([]string{d.NetworkID})
@@ -586,6 +597,23 @@ func (d *Driver) setPublicIP(publicip string) error {
 	d.PublicIPID = ips.PublicIpAddresses[0].Id
 
 	log.Debugf("public ip id: %q", d.PublicIPID)
+
+	return nil
+}
+
+func (d *Driver) setUserData(userDataFile string) error {
+	d.UserDataFile = userDataFile
+
+	if d.UserDataFile == "" {
+		return nil
+	}
+
+	data, err := ioutil.ReadFile(d.UserDataFile)
+	if err != nil {
+		return fmt.Errorf("Failed to read user data file: %s", err)
+	}
+
+	d.UserData = base64.StdEncoding.EncodeToString(data)
 
 	return nil
 }
