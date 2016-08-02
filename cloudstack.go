@@ -319,7 +319,10 @@ func (d *Driver) Create() error {
 	p.SetName(d.MachineName)
 	p.SetDisplayname(d.MachineName)
 	p.SetKeypair(d.SSHKeyPair)
-	p.SetUserdata(d.UserData)
+
+	if d.UserData != "" {
+		p.SetUserdata(d.UserData)
+	}
 
 	if d.NetworkID != "" {
 		p.SetNetworkids([]string{d.NetworkID})
