@@ -525,9 +525,13 @@ func (d *Driver) setTemplate(template string) error {
 	}
 
 	cs := d.getClient()
-	templateid, err := cs.Template.GetTemplateID(d.Template, "executable", d.ZoneID)
+	templateid, counts, err := cs.Template.GetTemplateID(d.Template, "executable", d.ZoneID)
 	if err != nil {
 		return fmt.Errorf("Unable to get template id: %v", err)
+	}
+
+	if counts > 1 {
+		return fmt.Errorf("Unable to specify template id")
 	}
 
 	d.TemplateID = templateid
@@ -545,9 +549,13 @@ func (d *Driver) setServiceOffering(serviceoffering string) error {
 	}
 
 	cs := d.getClient()
-	serviceofferingid, err := cs.ServiceOffering.GetServiceOfferingID(d.ServiceOffering)
+	serviceofferingid, counts, err := cs.ServiceOffering.GetServiceOfferingID(d.ServiceOffering)
 	if err != nil {
 		return fmt.Errorf("Unable to get service offering id: %v", err)
+	}
+
+	if counts > 1 {
+		return fmt.Errorf("Unable to specify service offering id")
 	}
 
 	d.ServiceOfferingID = serviceofferingid
@@ -566,9 +574,13 @@ func (d *Driver) setNetwork(network string) error {
 	}
 
 	cs := d.getClient()
-	networkid, err := cs.Network.GetNetworkID(d.Network)
+	networkid, counts, err := cs.Network.GetNetworkID(d.Network)
 	if err != nil {
 		return fmt.Errorf("Unable to get network id: %v", err)
+	}
+
+	if counts > 1 {
+		return fmt.Errorf("Unable to specify network id")
 	}
 
 	d.NetworkID = networkid
