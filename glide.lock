@@ -1,36 +1,43 @@
-hash: 58cc43e0885a5a1a288059c8fc1ba19e11ca1172ba5fe08a34061e7886bcc78a
-updated: 2016-07-06T11:25:33.550149238+09:00
+hash: 8170c88c66e4380f8bf3b01cc7f09658b2572fe07670afa150124a7e5ea205a5
+updated: 2017-10-22T16:37:38.113790002+09:00
 imports:
 - name: github.com/Azure/go-ansiterm
-  version: 70b2c90b260171e829f1ebd7c17f600c11858dbe
+  version: d6e3b3328b783f23731bc4d058875b0371ff8109
 - name: github.com/docker/docker
   version: a8a31eff10544860d2188dddabdee4d727545796
   subpackages:
   - pkg/term
 - name: github.com/docker/machine
-  version: a650a404fc3e006fea17b12615266168db79c776
+  version: 0c3f538eb470d1546c42f82646000726e237c2b6
   subpackages:
   - libmachine/drivers
-  - libmachine/log
-  - libmachine/mcnflag
-  - libmachine/ssh
-  - libmachine/state
   - libmachine/drivers/plugin
-  - libmachine/mcnutils
   - libmachine/drivers/plugin/localbinary
   - libmachine/drivers/rpc
+  - libmachine/log
+  - libmachine/mcnflag
+  - libmachine/mcnutils
+  - libmachine/ssh
+  - libmachine/state
   - libmachine/version
   - version
 - name: github.com/Sirupsen/logrus
-  version: cdaedc68f2894175ac2b3221869685602c759e71
+  version: 89742aefa4b206dcf400792f3bd35b542998eb3b
 - name: github.com/xanzy/go-cloudstack
-  version: 104168fa792713f5e04b76e2862779dc2ad85bcc
+  version: c815114af88405d9a8464cab25b71af3b38547c9
   subpackages:
   - cloudstack
 - name: golang.org/x/crypto
-  version: beef0f4390813b96e8e68fd78570396d0f4751fc
+  version: 51714a8c4ac1764f07ab4127d7f739351ced4759
   subpackages:
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
   - ssh
   - ssh/terminal
-  - curve25519
-devImports: []
+- name: golang.org/x/sys
+  version: d9157a9621b69ad1d8d77a1933590c416593f24f
+  subpackages:
+  - unix
+  - windows/registry
+testImports: []
